@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Apresentação Interativa</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+      button {
+        padding: 15px 30px;
+        font-size: 18px;
+      }
+      #status {
+        margin-top: 20px;
+        font-size: 16px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bem-vindos à nossa aula especial!</h1>
+    <p>Clique no botão abaixo para começar a conversa com o computador.</p>
+    <button onclick="iniciarConversa()">Iniciar Conversa</button>
+    <p id="status"></p>
+
+    <script>
+      var recognition;
+      var reconhecendo = false;
+      var etapa = 0; // Variável para controlar as etapas da conversa
+
+      function suporteReconhecimentoVoz() {
+        return (
+          "SpeechRecognition" in window || "webkitSpeechRecognition" in window
+        );
+      }
+
+      if (suporteReconhecimentoVoz()) {
+        var SpeechRecognition =
+          window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.lang = "pt-BR";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        // Aumenta o tempo de silêncio antes de encerrar (em milissegundos)
+        recognition.onsoundend = function () {
+          setTimeout(function () {
+            recognition.stop();
+          }, 5000); // Aguarda 5 segundos de silêncio antes de parar
+        };
+      } else {
+        alert(
+          "Seu navegador não suporta reconhecimento de voz. Por favor, use o Google Chrome."
+        );
+      }
+
+      function falar(texto, callback) {
+        var synth = window.speechSynthesis;
+        var utterThis = new SpeechSynthesisUtterance(texto);
+        utterThis.lang = "pt-BR";
+        synth.cancel();
+        synth.speak(utterThis);
+        utterThis.onend = function () {
+          if (callback) {
+            setTimeout(function () {
+              callback();
+            }, 1000);
+          }
+        };
+        console.log("Falando: " + texto);
+      }
+
+      function iniciarConversa() {
+        if (reconhecendo) {
+          console.log("O reconhecimento de fala já está ativo.");
+          return;
+        }
+        etapa = 1; // Inicia a primeira etapa da conversa
+        falar("Olá, crianças! Tudo bem com vocês?", function () {
+          escutarResposta();
+        });
+      }
+
+      function escutarResposta() {
+        document.getElementById("status").innerText =
+          "Aguardando a resposta...";
+        recognition.start();
+        reconhecendo = true;
+
+        recognition.onresult = function (event) {
+          var frase = event.results[0][0].transcript;
+          console.log("Você disse: " + frase);
+          document.getElementById("status").innerText = "Você disse: " + frase;
+
+          analisarResposta(frase);
+        };
+
+        recognition.onend = function () {
+          reconhecendo = false;
+          document.getElementById("status").innerText = "";
+        };
+
+        recognition.onerror = function (event) {
+          console.error("Erro no reconhecimento de fala: " + event.error);
+          document.getElementById("status").innerText =
+            "Não entendi. Por favor, tente novamente.";
+          reconhecendo = false;
+        };
+      }
+
+      function analisarResposta(frase) {
+        frase = frase.toLowerCase();
+
+        if (etapa === 1) {
+          // Etapa 1: O computador perguntou "Tudo bem com vocês?"
+          if (frase.includes("sim") || frase.includes("tudo bem")) {
+            falar(
+              "Que bom! Estou aqui para mostrar como funciono.",
+              function () {
+                etapa = 2; // Avança para a próxima etapa
+                // Aguarda a próxima interação
+                escutarResposta();
+              }
+            );
+          } else {
+            falar("Desculpe, não entendi. Podem repetir?", function () {
+              escutarResposta(); // Tenta novamente
+            });
+          }
+        } else if (etapa === 2) {
+          // Etapa 2: A professora pergunta "Como você está, computador?"
+          if (
+            frase.includes("como você tá") ||
+            frase.includes("como você está") ||
+            frase.includes("como você está computador") ||
+            frase.includes("como você tá computador") ||
+            frase.includes("como você tá se sentindo") ||
+            frase.includes("como você está se sentindo")
+          ) {
+            falar("Estou ótimo e animado para aprender com vocês!");
+          } else {
+            falar("Desculpe, não entendi. Podem repetir?", function () {
+              escutarResposta(); // Tenta novamente
+            });
+          }
+        } else {
+          // Caso não esteja em nenhuma etapa específica
+          falar("Desculpe, não entendi. Podem repetir?", function () {
+            escutarResposta(); // Tenta novamente
+          });
+        }
+      }
+    </script>
+  </body>
+</html>
