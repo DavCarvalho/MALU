@@ -50,7 +50,7 @@
         recognition.onsoundend = function () {
           setTimeout(function () {
             recognition.stop();
-          }, 5000); // Aguarda 5 segundos de silêncio antes de parar
+          }, 1000);
         };
       } else {
         alert(
@@ -68,7 +68,7 @@
           if (callback) {
             setTimeout(function () {
               callback();
-            }, 1000);
+            }, 3000); // Aumenta o tempo de espera antes de escutar a resposta
           }
         };
         console.log("Falando: " + texto);
@@ -141,7 +141,34 @@
             frase.includes("como você tá se sentindo") ||
             frase.includes("como você está se sentindo")
           ) {
-            falar("Estou ótimo e animado para aprender com vocês!");
+            falar(
+              "Estou ótimo e animado para aprender com vocês!",
+              function () {
+                etapa = 3; // Avança para a próxima etapa
+                escutarResposta(); // Aguarda a próxima interação
+              }
+            );
+          } else {
+            falar("Desculpe, não entendi. Podem repetir?", function () {
+              escutarResposta(); // Tenta novamente
+            });
+          }
+        } else if (etapa === 3) {
+          // Etapa 3: A professora pergunta "Computador, como você funciona?"
+          if (
+            frase.includes("como você funciona") ||
+            frase.includes("como você trabalha") ||
+            frase.includes("como você opera") ||
+            frase.includes("computador, como você funciona") ||
+            frase.includes("computador como você funciona") ||
+            frase.includes("como você funciona computador")
+          ) {
+            falar(
+              "Eu funciono usando código binário, que é uma linguagem composta por zeros e uns. Esses números instruem meus componentes para realizar tarefas e processar informações!",
+              function () {
+                etapa = 0; // Conversa concluída
+              }
+            );
           } else {
             falar("Desculpe, não entendi. Podem repetir?", function () {
               escutarResposta(); // Tenta novamente
